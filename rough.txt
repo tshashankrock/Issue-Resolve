@@ -1,1 +1,63 @@
-hello this is shashank Tripathi how's you folk.
+========================================In flask ============================================================================
+To read the filename from the form and create the dynamic table: :
+
+import time
+import psycopg2 #convert python variable to sql variable
+import os
+from werkzeug import secure_filename
+import csv
+import requests #for requesting Api
+from flask import Flask, render_template, request, redirect
+from sqlalchemy import create_engine
+from sqlalchemy.orm import scoped_session, sessionmaker
+
+app = Flask(__name__)
+
+conn = psycopg2.connect(host="localhost",database="postgres",user = "postgres", password="test123")
+
+#@app.route('/')
+#def load():
+#        return render_template('home.html');
+
+@app.route('/',methods=["GET","POST"])
+def loadfile():
+        if request.method == 'GET':
+            return render_template('home.html');
+        if request.method == 'POST':
+            filename = request.files['file']
+            #filename = request.form.get('file1');
+            print(filename.filename)
+            #filename.save(secure_filename(f.filename))
+                #filename = request.form.files("file1");
+            #except ValueError:
+            #    raise ValueError("Invalid request try again")
+            tablename = "table"+str(round(time.time()));
+            print(tablename);
+            BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            Filedir = os.path.join(BASE_DIR,"name.csv")
+        cur = conn.cursor();
+        #print(cur);
+        with open(Filedir, 'r') as f:
+            headerval = []
+            headerval = next(f).split(',');
+            strippedline = [s.rstrip() for s in headerval];
+            string ="create table %s ("%(tablename);
+            for a in range(len(strippedline)):
+                if a == len(strippedline)-1:
+                    string = string + strippedline[a] + " text)";
+                else:
+                    string = string+ strippedline[a] + " text,";
+            #print(string);
+            cur.execute(string);
+            cur.copy_from(f, tablename , sep=',')
+            conn.commit();
+            conn.close();
+            cur.close();
+        return ('file uploaded successfully');
+    # Notice that we don't need the `csv` module.
+      # Skip the header row.
+conn.commit()
+if __name__ == "__main__":
+        app.run(debug=True)
+        
+=============================================================================================================================        
